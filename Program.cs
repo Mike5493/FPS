@@ -13,10 +13,9 @@ internal class Program
 {
     private const int ScreenWidth = 1280;
     private const int ScreenHeight = 720;
-    private const int MapWidth = 16;
-    private const int MapHeight = 16;
+    private const int MapSize = 32;
     private const int AngleSteps = 3600;
-    
+
     // Lookup tables
     private static readonly double[] SinTable = new double[AngleSteps];
     private static readonly double[] CosTable = new double[AngleSteps];
@@ -25,42 +24,58 @@ internal class Program
     static void InitTables( double dirX, double dirY, double planeX, double planeY )
     {
         // Sine and Cosine tables
-        for( int i = 0; i < AngleSteps; i++ )
+        for( var i = 0; i < AngleSteps; i++ )
         {
             var angle = (i * Math.PI * 2) / AngleSteps;
             SinTable[i] = Math.Sin( angle );
             CosTable[i] = Math.Cos( angle );
         }
-        
+
         // Ray direction table
-        for( int x = 0; x < ScreenWidth; x++ )
+        for( var x = 0; x < ScreenWidth; x++ )
         {
-            double cameraX = 2.0 * x / ScreenWidth - 1.0;
+            var cameraX = 2.0 * x / ScreenWidth - 1.0;
             RayTable[x] = (dirX + planeX * cameraX, dirY + planeY * cameraX);
         }
     }
-    
+
     private static void Main( string[] args )
     {
-
-        var map = new int[MapHeight, MapWidth]
+        var map = new int[32, 32]
         {
-            { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
-            { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-            { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-            { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-            { 1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-            { 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-            { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-            { 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-            { 1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-            { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-            { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-            { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-            { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-            { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-            { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-            { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 }
+            { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
+            { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+            { 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1 },
+            { 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1 },
+            { 1, 0, 1, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1 },
+            { 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1 },
+            { 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1 },
+            { 1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1 },
+            { 1, 0, 1, 0, 1, 1, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1 },
+            { 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1 },
+            { 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1 },
+            { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+            { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+            { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+            { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+            { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
+            //================================================================================================
+            { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+            { 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1 },
+            { 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1 },
+            { 1, 0, 1, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1 },
+            { 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1 },
+            { 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1 },
+            { 1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1 },
+            { 1, 0, 1, 0, 1, 1, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1 },
+            { 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1 },
+            { 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1 },
+            { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+            { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1 },
+            { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+            { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+            { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+            { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 }
         };
 
         // Player Variables
@@ -68,12 +83,12 @@ internal class Program
         var playerY = 8.5;
         var playerAngle = 0.0;
         const double moveSpeed = 0.1;
-        const double rotSpeed = 0.005;
-        
+        const double rotSpeed = 0.003;
+
         // Sine and Cosine tables
-        for( int i = 0; i < AngleSteps; i++ )
+        for( var i = 0; i < AngleSteps; i++ )
         {
-            double angle = (i * Math.PI * 2) / AngleSteps;
+            var angle = (i * Math.PI * 2) / AngleSteps;
             SinTable[i] = Math.Sin( angle );
             CosTable[i] = Math.Cos( angle );
         }
@@ -86,11 +101,11 @@ internal class Program
 
         Raylib.InitWindow( ScreenWidth, ScreenHeight, "~THURS~" );
         Raylib.SetTargetFPS( 60 );
+        Raylib.DisableCursor();
+
         var wallTexture = Raylib.LoadTexture( "/home/mikey/RiderProjects/FPS/mossy.png" );
 
-        Raylib.DisableCursor();
-        
-        
+
         InitTables( dirX, dirY, planeX, planeY );
 
         while( !Raylib.WindowShouldClose() )
@@ -123,13 +138,19 @@ internal class Program
             }
 
             // Collision detection
+            const double collisionRadius = 0.2;
             var newX = playerX + moveX;
             var newY = playerY + moveY;
-            if( map[(int)newY, (int)newX] == 0 )
-            {
-                playerX = newX;
-                playerY = newY;
-            }
+
+            // Check X
+            var mx = (int)(newX + Math.Sign( moveX ) * collisionRadius);
+            var my = (int)playerY;
+            if( map[my, mx] == 0 ) playerX = newX;
+
+            // Check Y
+            mx = (int)playerX;
+            my = (int)(newY + Math.Sign( moveY ) * collisionRadius);
+            if( map[my, mx] == 0 ) playerY = newY;
 
             var mouseDelta = Raylib.GetMouseDelta();
             playerAngle += mouseDelta.X * rotSpeed;
@@ -144,10 +165,10 @@ internal class Program
             Raylib.BeginDrawing();
             Raylib.ClearBackground( Color.Black );
 
-            var ceilingColor = Color.Black;
-            var floorColor = Color.Black;
-            const double sigma = 5.0;
-            
+            var ceilingColor = new Color( 15, 15, 15, 255 );
+            var floorColor = new Color( 25, 25, 25, 255 );
+            const double sigma = 8.0;
+
             // Raycasting loop
             for( var x = 0; x < ScreenWidth; x++ )
             {
@@ -184,6 +205,7 @@ internal class Program
                     stepY = 1;
                     sideDistY = (mapY + 1.0 - playerY) * deltaDistY;
                 }
+
                 // DDA Loop
                 while( !hit )
                 {
@@ -203,45 +225,53 @@ internal class Program
                     if( map[mapY, mapX] == 1 ) hit = true;
                 }
 
-                double t;
-                if( side == 0 )
-                {
-                    double xHit = stepX == 1 ? mapX : mapX + 1;
-                    t = (xHit - playerX) / rayDirX;
-                }
-                else
-                {
-                    double yHit = stepY == 1 ? mapY : mapY + 1;
-                    t = (yHit - playerY) / rayDirY;
-                }
+                // Fish eye correction
+                var t = side == 0
+                    ? ((stepX == 1 ? mapX : mapX + 1) - playerX) / rayDirX
+                    : ((stepY == 1 ? mapY : mapY + 1) - playerY) / rayDirY;
 
-                var lineHeight = (int)(ScreenHeight / t);
+                var effectiveT = t - collisionRadius;
+                if( effectiveT < 0.01 ) effectiveT = 0.01;
+
+                var cosA = dirX * rayDirX + dirY * rayDirY;
+                var perpT = effectiveT * cosA;
+                if( perpT < 0.01 ) perpT = 0.01;
+
+                var lineHeight = (int)(ScreenHeight / perpT);
                 var drawStart = -lineHeight / 2 + ScreenHeight / 2;
                 if( drawStart < 0 ) drawStart = 0;
                 var drawEnd = lineHeight / 2 + ScreenHeight / 2;
                 if( drawEnd >= ScreenHeight ) drawEnd = ScreenHeight - 1;
 
+                Raylib.DrawRectangle( x, 0, 1, drawStart, ceilingColor );
+
+
                 var wallX = side == 0 ? playerY + t * rayDirY : playerX + t * rayDirX;
                 wallX -= Math.Floor( wallX );
-                var texX = (int)(wallX * wallTexture.Width);
-                if( side == 0 && rayDirX > 0 ) texX = wallTexture.Width - texX - 1;
-                if( side == 1 && rayDirY < 0 ) texX = wallTexture.Width - texX - 1;
-                
-                Raylib.DrawRectangle( x, 0, 1, drawStart, ceilingColor );
+                var texWallX = (int)(wallX * wallTexture.Width);
+                switch( side )
+                {
+                    case 0 when rayDirX > 0:
+                    case 1 when rayDirY < 0:
+                        texWallX = wallTexture.Width - texWallX - 1;
+                        break;
+                }
+
                 Raylib.DrawRectangle( x, drawEnd, 1, ScreenHeight - drawEnd, floorColor );
-                
+
                 // Dynamic lighting
                 var brightness = Math.Exp( -t / sigma );
                 var gray = (byte)(brightness * 255);
                 var tint = new Color( (int)gray, gray, gray, 255 );
 
-                Rectangle sourceRec = new Rectangle( texX, 0, 1, wallTexture.Height );
+                Rectangle sourceRec = new Rectangle( texWallX, 0, 1, wallTexture.Height );
                 Rectangle destRec = new Rectangle( x, drawStart, 1, drawEnd - drawStart );
                 Raylib.DrawTexturePro( wallTexture, sourceRec, destRec, new Vector2( 0, 0 ), 0, tint );
             }
 
             Raylib.EndDrawing();
         }
+
         Raylib.UnloadTexture( wallTexture );
         Raylib.CloseWindow();
     }
